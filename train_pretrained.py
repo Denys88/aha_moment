@@ -302,7 +302,7 @@ def build_training_args(cfg: dict) -> GRPOConfig:
         max_prompt_length=t["max_prompt_length"],
         max_completion_length=m["max_seq_len"] - t["max_prompt_length"],
 
-        learning_rate=t["learning_rate"],
+        learning_rate=float(t["learning_rate"]),
         adam_beta1=0.9,
         adam_beta2=0.99,
         weight_decay=0.1,
