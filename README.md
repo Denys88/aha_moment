@@ -32,6 +32,12 @@ python train_pretrained.py --resume
 
 # Resume from a specific checkpoint
 python train_pretrained.py --resume outputs_pretrained/checkpoint-200
+
+# Interactive Q&A with the trained model
+python train_pretrained.py --play
+
+# Use a specific LoRA adapter
+python train_pretrained.py --play path/to/lora
 ```
 
 ## What It Does
