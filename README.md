@@ -7,7 +7,7 @@ A base pretrained model (Qwen2.5-3B) learns chain-of-thought reasoning through r
 ## Hardware
 
 - Single NVIDIA GPU with >= 16 GB VRAM (tested on RTX 5090 32 GB)
-- ~4 hours for 1000 training steps
+- ~4 hours for 1000 training steps (200+ steps is enough for good results — under 1 hour)
 
 ## Quick Start
 
