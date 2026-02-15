@@ -1,0 +1,22 @@
+# RTX 4090 (24 GB) — reduced footprint to fit in less VRAM
+model:
+  name: "unsloth/Qwen2.5-3B"
+  max_seq_len: 1024
+  lora_rank: 32
+  load_in_4bit: true
+  use_vllm: true
+  gpu_memory_utilization: 0.5
+
+training:
+  max_steps: 1000
+  learning_rate: 5e-6
+  num_generations: 6
+  gradient_accumulation_steps: 4
+  max_completion_length: 512
+  max_prompt_length: 256
+  save_steps: 100
+  output_dir: "outputs_pretrained"
+
+sampling:
+  print_every: 20
+  num_samples: 3

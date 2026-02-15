@@ -8,13 +8,16 @@ Hardware: Single NVIDIA GPU with >= 16GB VRAM (tested on RTX 5090 32GB).
 
 Usage:
     pip install unsloth vllm
-    python train_pretrained.py
+    python train_pretrained.py                    # default: configs/5090.yaml
+    python train_pretrained.py --config configs/4090.yaml
 """
 
 import os
 os.environ["UNSLOTH_VLLM_STANDBY"] = "1"  # Extra context length optimization
 
+import argparse
 import re
+import yaml
 import pathlib, importlib, sys
 from unsloth import FastLanguageModel, PatchFastRL
 from datasets import load_dataset, Dataset
@@ -77,26 +80,33 @@ if _cache.exists():
 from trl import GRPOConfig, GRPOTrainer
 
 # =============================================================================
-# Configuration — tweak these knobs
+# Configuration — load from YAML
 # =============================================================================
-MODEL_NAME   = "unsloth/Qwen2.5-3B"            # base model for true aha moment
-MAX_SEQ_LEN  = 1024
-LORA_RANK    = 64        # higher = smarter but slower; try 32 if OOM
-LOAD_IN_4BIT = True      # QLoRA; set False for LoRA-16bit (needs more VRAM)
-USE_VLLM     = True     
+parser = argparse.ArgumentParser()
+parser.add_argument("--config", type=str, default="configs/5090.yaml",
+                    help="Path to YAML config file")
+args = parser.parse_args()
+
+with open(args.config) as f:
+    cfg = yaml.safe_load(f)
+
+# Model
+MODEL_NAME   = cfg["model"]["name"]
+MAX_SEQ_LEN  = cfg["model"]["max_seq_len"]
+LORA_RANK    = cfg["model"]["lora_rank"]
+LOAD_IN_4BIT = cfg["model"]["load_in_4bit"]
+USE_VLLM     = cfg["model"]["use_vllm"]
+GPU_MEM_UTIL = cfg["model"]["gpu_memory_utilization"]
 
 # Training
-MAX_STEPS    = 1000      # base model needs more steps; aha moment ~200-400
-LR           = 5e-6
-NUM_GEN      = 8         # completions per prompt (group size)
-GRAD_ACCUM   = 4         # effective batch = per_device * grad_accum * num_gen
-MAX_COMP_LEN = 512       # max new tokens per completion; increase for longer CoT
-MAX_PROMPT   = 256
-SAVE_STEPS   = 100
-OUTPUT_DIR   = "outputs_pretrained"
-
-# GPU memory — adjust if OOM
-GPU_MEM_UTIL = 0.6       # fraction of VRAM for vLLM KV cache (rest for training)
+MAX_STEPS    = cfg["training"]["max_steps"]
+LR           = cfg["training"]["learning_rate"]
+NUM_GEN      = cfg["training"]["num_generations"]
+GRAD_ACCUM   = cfg["training"]["gradient_accumulation_steps"]
+MAX_COMP_LEN = cfg["training"]["max_completion_length"]
+MAX_PROMPT   = cfg["training"]["max_prompt_length"]
+SAVE_STEPS   = cfg["training"]["save_steps"]
+OUTPUT_DIR   = cfg["training"]["output_dir"]
 
 # =============================================================================
 # System prompt & answer format
@@ -284,8 +294,8 @@ training_args = GRPOConfig(
 # =============================================================================
 # Callback — print sample completions every N steps
 # =============================================================================
-PRINT_EVERY = 20
-NUM_SAMPLES = 3          # how many examples to show each time
+PRINT_EVERY = cfg["sampling"]["print_every"]
+NUM_SAMPLES = cfg["sampling"]["num_samples"]
 
 SAMPLE_QUESTIONS = [
     "Natalia sold clips to 48 of her friends in April, and then she sold half as many clips in May. How many clips did Natalia sell altogether in April and May?",

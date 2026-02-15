@@ -21,8 +21,11 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements_pretrained.txt
 
-# Train
+# Train (default: RTX 5090)
 python train_pretrained.py
+
+# Or specify a config for your GPU
+python train_pretrained.py --config configs/4090.yaml
 ```
 
 ## What It Does
@@ -125,5 +128,7 @@ tensorboard --logdir outputs_pretrained/logs
 ## Files
 
 - `train_pretrained.py` — main training script
+- `configs/5090.yaml` — config for RTX 5090 (32 GB) — lora_rank=64, num_gen=8
+- `configs/4090.yaml` — config for RTX 4090 (24 GB) — lora_rank=32, num_gen=6
 - `requirements_pretrained.txt` — Python dependencies
 - `install_deps.sh` — system-level CUDA toolkit and gcc setup

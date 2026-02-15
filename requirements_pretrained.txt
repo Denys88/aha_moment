@@ -9,3 +9,5 @@ transformers>=4.45.0
 accelerate
 peft
 bitsandbytes
+pyyaml
+tensorboard
