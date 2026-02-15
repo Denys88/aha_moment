@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+*.pyc
+unsloth_compiled_cache/
+outputs_pretrained/
+checkpoints/
+*.egg-info/
+.env

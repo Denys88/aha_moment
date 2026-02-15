@@ -1,0 +1,11 @@
+# Requirements for train_pretrained.py (Unsloth + TRL + vLLM)
+# Install with: pip install -r requirements_pretrained.txt
+unsloth
+vllm
+trl>=0.22.0
+datasets
+torch>=2.0
+transformers>=4.45.0
+accelerate
+peft
+bitsandbytes
