@@ -93,9 +93,28 @@ export PATH=/usr/local/cuda-12.8/nvvm/bin:$PATH
 
 ### Unsloth coef_1 Shape Mismatch Bug
 
-Unsloth's compiled `UnslothGRPOTrainer` has a bug where `coef_1` (from `grpo_accumulated_loss`) includes extra `max_left_pad` columns but `completion_mask` does not. This causes `RuntimeError: The size of tensor a (N) must match the size of tensor b (M)` during metrics logging.
+Unsloth's compiled `UnslothGRPOTrainer` has a bug that crashes training with an error like:
 
-The training script includes an automatic patch that fixes this after `PatchFastRL` runs. The key insight: `PatchFastRL` stores the module as `"UnslothGRPOTrainer"` in `sys.modules` (not `"unsloth_compiled_cache.UnslothGRPOTrainer"`), so the reload must use the correct name.
+```
+RuntimeError: The size of tensor a (793) must match the size of tensor b (768)
+  at non-singleton dimension 1
+```
+
+or similar with numbers like `(537) vs (512)`. The difference between the two numbers equals the left-padding size (typically ~25 tokens, roughly the system prompt length).
+
+**Root cause:** In `compute_loss`, the function `grpo_accumulated_loss` returns `coef_1` with shape `[batch, logits_to_keep + max_left_pad]`, but the metrics section uses `completion_mask` with shape `[batch, logits_to_keep]`. The `max_left_pad` extra columns come from left-padding alignment for variable-length prompts in the batch.
+
+The crash happens at:
+```python
+# Inside UnslothGRPOTrainer.compute_loss (unsloth_compiled_cache/UnslothGRPOTrainer.py)
+def masked_batch_mean(x):
+    return (x * completion_mask).sum() / completion_token_count
+    #       ^ coef_1 has 793 cols    ^ completion_mask has 768 cols → RuntimeError
+```
+
+**Fix:** The training script includes an automatic patch that inserts `coef_1 = coef_1[:, -completion_mask.shape[1]:]` before both `masked_batch_mean` definitions. The patch runs after `PatchFastRL` writes the compiled file, then reloads the module and re-binds the class in `trl`.
+
+**Key detail for anyone trying to patch this manually:** `PatchFastRL` stores the module as `"UnslothGRPOTrainer"` in `sys.modules` (not `"unsloth_compiled_cache.UnslothGRPOTrainer"`). If you use the wrong name, `importlib.reload` silently does nothing and the fix never takes effect.
 
 ## TensorBoard
 
