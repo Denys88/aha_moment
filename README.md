@@ -166,6 +166,6 @@ tensorboard --logdir outputs_pretrained/logs
 
 - `train_pretrained.py` — main training script
 - `configs/5090.yaml` — config for RTX 5090 (32 GB) — lora_rank=64, num_gen=8
-- `configs/4090.yaml` — config for RTX 4090 (24 GB) — lora_rank=32, num_gen=6
+- `configs/4090.yaml` — config for RTX 4090 (24 GB) — lora_rank=32, num_gen=6 *(not tested yet)*
 - `requirements_pretrained.txt` — Python dependencies
 - `install_deps.sh` — system-level CUDA toolkit and gcc setup
