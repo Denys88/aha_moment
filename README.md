@@ -26,6 +26,12 @@ python train_pretrained.py
 
 # Or specify a config for your GPU
 python train_pretrained.py --config configs/4090.yaml
+
+# Resume from latest checkpoint
+python train_pretrained.py --resume
+
+# Resume from a specific checkpoint
+python train_pretrained.py --resume outputs_pretrained/checkpoint-200
 ```
 
 ## What It Does

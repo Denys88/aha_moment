@@ -8,8 +8,10 @@ Hardware: Single NVIDIA GPU with >= 16GB VRAM (tested on RTX 5090 32GB).
 
 Usage:
     pip install unsloth vllm
-    python train_pretrained.py                    # default: configs/5090.yaml
-    python train_pretrained.py --config configs/4090.yaml
+    python train_pretrained.py                              # default: configs/5090.yaml
+    python train_pretrained.py --config configs/4090.yaml   # RTX 4090
+    python train_pretrained.py --resume                     # resume from latest checkpoint
+    python train_pretrained.py --resume outputs_pretrained/checkpoint-200
 """
 
 import os
@@ -85,6 +87,8 @@ from trl import GRPOConfig, GRPOTrainer
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", type=str, default="configs/5090.yaml",
                     help="Path to YAML config file")
+parser.add_argument("--resume", nargs="?", const=True, default=False,
+                    help="Resume from checkpoint. No value = latest, or pass a path.")
 args = parser.parse_args()
 
 with open(args.config) as f:
@@ -382,9 +386,11 @@ print(f"  group_size = {NUM_GEN}")
 print(f"  grad_accum = {GRAD_ACCUM}")
 print(f"  lr         = {LR}")
 print(f"  max_comp   = {MAX_COMP_LEN}")
+print(f"  resume     = {args.resume}")
 print(f"{'='*60}\n")
 
-trainer.train()
+resume_ckpt = args.resume if isinstance(args.resume, str) else args.resume
+trainer.train(resume_from_checkpoint=resume_ckpt)
 
 # =============================================================================
 # Save LoRA adapter
