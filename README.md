@@ -81,11 +81,11 @@ This question is **not** in the GSM8K training set — the model learned to reas
 
 | Steps | What Happens |
 |-------|-------------|
-| 0-50 | Gibberish, random tokens, no format |
-| 50-100 | Model discovers `<think>/<answer>` tags, starts attempting math |
-| 100-200 | Format solidifies, correctness starts improving |
-| 200-400 | **"Aha moment"** — correctness jumps, coherent chain-of-thought |
-| 400-1000 | Refinement, accuracy stabilizes |
+| 0-50 | Gibberish, random tokens, no structure |
+| 50-100 | Model discovers `<think>/<answer>` tags, attempts basic math |
+| 100-200 | **"Aha moment"** — format locks in, correct answers with coherent chain-of-thought start appearing |
+| 200-400 | Rapid improvement — correctness reward climbs, reasoning becomes consistent |
+| 400+ | Near-perfect format, high accuracy on novel questions outside training set |
 
 ## NVCC / CUDA Issues on WSL2
 
