@@ -52,6 +52,31 @@ python train_pretrained.py --play path/to/lora
    - **xmlcount_reward** (up to 0.5) — partial credit for individual tags
 4. Uses vLLM for fast generation, PyTorch for gradient computation
 
+## Example: Interactive Play (after ~400 steps)
+
+```
+You: Victor is competing in the CrossFit Open workout 24.1, which has a 15-minute time cap.
+He completes burpees over the bar at a rate of 8 per minute for the first 5 minutes, then
+slows to 5 per minute for the next 6 minutes, and finishes the last 4 minutes at 3 per
+minute. How many total burpees over the bar did Victor complete?
+
+Model:
+<think>
+Victor completes burpees over the bar at a rate of 8 per minute for the first 5 minutes.
+So, the number of burpees he completes in the first 5 minutes is:
+8 * 5 = 40 burpees
+Then, he slows down to 5 per minute for the next 6 minutes:
+5 * 6 = 30 burpees
+Finally, he finishes the last 4 minutes at 3 per minute:
+3 * 4 = 12 burpees
+Therefore, the total number of burpees Victor completes is:
+40 + 30 + 12 = 82 burpees
+</think>
+<answer>82</answer>
+```
+
+This question is **not** in the GSM8K training set — the model learned to reason step-by-step purely from reward signals.
+
 ## Training Timeline
 
 | Steps | What Happens |
