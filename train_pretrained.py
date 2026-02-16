@@ -14,6 +14,8 @@ Usage:
     python train_pretrained.py --resume outputs_pretrained/checkpoint-200
     python train_pretrained.py --play                       # interactive Q&A with trained model
     python train_pretrained.py --play path/to/lora          # use specific LoRA adapter
+    python train_pretrained.py --eval                       # evaluate on GSM8K test set
+    python train_pretrained.py --eval path/to/lora          # evaluate specific LoRA adapter
 """
 
 import os
@@ -141,6 +143,13 @@ def parse_args():
                         default=None, metavar="LORA_PATH",
                         help="Interactive mode: ask math questions. "
                              "No value = default LoRA path, or pass a path.")
+    parser.add_argument("--eval", nargs="?", const="checkpoints/grpo_pretrained_lora",
+                        default=None, metavar="LORA_PATH",
+                        help="Evaluate accuracy on GSM8K test set. "
+                             "No value = default LoRA path, or pass a path.")
+    parser.add_argument("--split", type=str, default="test",
+                        choices=["test", "train"],
+                        help="Dataset split for --eval (default: test)")
     return parser.parse_args()
 
 
@@ -429,6 +438,57 @@ def test_inference(model, tokenizer, cfg: dict):
 
 
 # =============================================================================
+# Evaluation
+# =============================================================================
+
+def evaluate(model, tokenizer, cfg: dict, lora_path: str, split: str = "test"):
+    """Evaluate accuracy on GSM8K dataset."""
+    from vllm import SamplingParams
+
+    max_tokens = cfg["model"]["max_seq_len"] - cfg["training"]["max_prompt_length"]
+    sp = SamplingParams(temperature=0.0, max_tokens=max_tokens)
+
+    try:
+        lora_req = model.load_lora(lora_path)
+        print(f"Loaded LoRA adapter from {lora_path}")
+    except Exception as e:
+        print(f"Warning: could not load LoRA from {lora_path}: {e}")
+        print("Evaluating base model (no LoRA)")
+        lora_req = None
+
+    dataset = get_gsm8k(split=split)
+    questions = [ex["question"] for ex in dataset]
+    gold_answers = [ex["answer"] for ex in dataset]
+
+    prompts = [
+        tokenizer.apply_chat_template(
+            [{"role": "system", "content": SYSTEM_PROMPT},
+             {"role": "user", "content": q}],
+            tokenize=False, add_generation_prompt=True,
+        )
+        for q in questions
+    ]
+
+    print(f"\nEvaluating on {len(prompts)} GSM8K {split} examples...")
+    outputs = model.fast_generate(prompts, sampling_params=sp, lora_request=lora_req)
+
+    correct = 0
+    total = len(outputs)
+    for i, (out, gold) in enumerate(zip(outputs, gold_answers)):
+        pred = extract_answer(out.outputs[0].text)
+        if pred == gold:
+            correct += 1
+        elif (i + 1) % 200 == 0 or i < 3:
+            print(f"  [{i+1}] Gold={gold}  Pred={pred}  Q={questions[i][:80]}...")
+
+    accuracy = correct / total * 100
+    print(f"\n{'='*60}")
+    print(f"  GSM8K {split} Accuracy: {correct}/{total} = {accuracy:.1f}%")
+    print(f"{'='*60}\n")
+    return accuracy
+
+
+# =============================================================================
 # Interactive play
 # =============================================================================
 
@@ -480,6 +540,10 @@ def main():
 
     if args.play is not None:
         play_interactive(model, tokenizer, cfg, args.play)
+        return
+
+    if args.eval is not None:
+        evaluate(model, tokenizer, cfg, args.eval, args.split)
         return
 
     dataset = get_gsm8k()

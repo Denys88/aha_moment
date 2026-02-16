@@ -87,6 +87,15 @@ This question is **not** in the GSM8K training set — the model learned to reas
 | 200-400 | Rapid improvement — correctness reward climbs, reasoning becomes consistent |
 | 400+ | Near-perfect format, high accuracy on novel questions outside training set |
 
+## Evaluation Results (Qwen2.5-3B, 400 steps, greedy decoding)
+
+| Split | Accuracy |
+|-------|----------|
+| GSM8K test (1319) | **75.7%** |
+| GSM8K train (7473) | **83.2%** |
+
+For reference, Qwen2.5-3B-Instruct (fully supervised) scores ~79% on GSM8K. With more training (1000 steps) expect ~78-82% test accuracy. To go higher, use a larger base model (7B+).
+
 ## NVCC / CUDA Issues on WSL2
 
 Building packages like `vllm`, `bitsandbytes`, or `flash-attn` from source requires a working CUDA toolkit. Here are common issues and fixes:
